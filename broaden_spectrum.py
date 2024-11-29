@@ -79,13 +79,14 @@ def main():
     parser.add_argument("--num_points", type=int, default=1000, help="Number of points in the output spectrum")
     parser.add_argument("--lineshape", choices=["pseudo-voigt", "lorentzian"], default="lorentzian", help="Lineshape to use")
     parser.add_argument("--contributions", action="store_true", help="Plot individual stick contributions")
-
+    parser.add_argument("--scale", type=float, default=1.0, help="Scale factor for stick intensities")
+    parser.add_argument("--shift", type=float, default=0.0, help="Energy shift for stick positions")
 
     args = parser.parse_args()
 
     data = np.loadtxt(args.input_file)
-    stick_positions = data[:, 0]
-    stick_intensities = data[:, 1]
+    stick_positions = data[:, 0] + args.shift
+    stick_intensities = data[:, 1]*args.scale
 
     x, spectrum, individual_contributions = broaden_spectrum(
         stick_positions, stick_intensities, args.gamma, (args.x_min, args.x_max),
@@ -106,7 +107,8 @@ def main():
     plt.xlabel("Energy")
     plt.ylabel("Intensity")
     plt.legend()
-    plt.ylim([0.0, 3])  # Adjust as needed
+    plt.ylim([0.0, 1])  # Adjust as needed
+    plt.xlim([3722, 3738])
     plt.show()
 
 if __name__ == "__main__":
