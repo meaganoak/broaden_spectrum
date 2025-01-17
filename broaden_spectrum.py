@@ -12,9 +12,9 @@ def lorentzian(x, x0, gamma):
     gamma (float): Full-width at half maximum (FWHM)
 
     Returns:
-    array: Broadening of a single stick at x0.
+    array: Broadening of a single transition at position x0.
     """
-    return gamma / np.pi / ((x - x0)**2 + gamma**2)
+    return  gamma / np.pi / ((x - x0)**2 + gamma**2)
 
 # Pseudo-Voigt function
 def pseudovoigt(x, x0, gamma, weight):
@@ -31,8 +31,7 @@ def pseudovoigt(x, x0, gamma, weight):
     """
     gaussian = (1 / (gamma * np.sqrt(2 * np.pi))) * np.exp(-(x - x0)**2 / (2 * gamma**2))
     lorentzian = gamma / np.pi / ((x - x0)**2 + gamma**2)
-    return (1 - weight) * gaussian + weight * lorentzian
-
+    return  (1 - weight) * gaussian + weight * lorentzian 
 
 # Broaden stick spectra with individual contributions
 def broaden_spectrum(stick_positions, stick_intensities, gamma, x_range, num_points=1000, lineshape="lorentzian", weight=1.0):
@@ -81,19 +80,20 @@ def main():
     parser.add_argument("--contributions", action="store_true", help="Plot individual stick contributions")
     parser.add_argument("--scale", type=float, default=1.0, help="Scale factor for stick intensities")
     parser.add_argument("--shift", type=float, default=0.0, help="Energy shift for stick positions")
+    parser.add_argument("--exp", type=str, help="Experimental data file")
 
     args = parser.parse_args()
 
-    data = np.loadtxt(args.input_file)
-    stick_positions = data[:, 0] + args.shift
-    stick_intensities = data[:, 1]*args.scale
+    data = np.loadtxt(args.input_file, skiprows=1)
+    stick_positions = data[:, 2] + args.shift
+    stick_intensities = data[:, 3]*args.scale
 
     x, spectrum, individual_contributions = broaden_spectrum(
         stick_positions, stick_intensities, args.gamma, (args.x_min, args.x_max),
         args.num_points, args.lineshape, args.weight)
 
     #Plotting broadened spectrum
-    plt.plot(x, spectrum, label="Total Broadened Spectrum", linewidth=2)
+    plt.plot(x, spectrum/np.max(spectrum), label="Broadening = {} eV, shift = {} eV".format(args.gamma,args.shift), linewidth=2.5, color='black')  #the spectrum is normalized to 1 here when plotted, linewidth is the ploted line thickness
 
     #Contributions flag turned on for individual contributions from each transition 
     if args.contributions:
@@ -102,13 +102,20 @@ def main():
 
     # Plot the stick spectrum - should add flag to turn this off if required
     for pos, intensity in zip(stick_positions, stick_intensities):
-        plt.plot([pos, pos], [0, intensity], 'r--', label="Stick Spectrum" if pos == stick_positions[0] else "")
+        plt.plot([pos, pos], [0, intensity], color='#6c3483', linestyle='-')
+
+    if args.exp:
+        exp_data = np.loadtxt(args.exp, skiprows=1)
+        exp_positions = exp_data[:, 0]
+        exp_intensities = exp_data[:, 1] / np.max(exp_data[:, 1]) #this normalizes the experimental intensities
+        plt.plot(exp_positions, exp_intensities, label="Experiment", linestyle='--', color='red', linewidth=1.5)
 
     plt.xlabel("Energy")
     plt.ylabel("Intensity")
     plt.legend()
     plt.ylim([0.0, 1])  # Adjust as needed
-    plt.xlim([3722, 3738])
+    plt.xlim([3715,3735])
+#    plt.xlim([args.x_min, args.x_max])
     plt.show()
 
 if __name__ == "__main__":
