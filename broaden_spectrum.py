@@ -74,13 +74,16 @@ def main():
     parser.add_argument("--gamma", type=float, default=1.0, help="FWHM of the broadening")
     parser.add_argument("--weight", type=float, default=0.5, help="Pseudo-Voigt weight of Lorentzian vs. Gaussian")
     parser.add_argument("--x_min", type=float, default=0.0, help="Minimum x-value for the spectrum range")
+    parser.add_argument("--plot_xmin", type=float, default=0.0, help="Minimum x-value for the plot x-range")
     parser.add_argument("--x_max", type=float, default=50.0, help="Maximum x-value for the spectrum range")
+    parser.add_argument("--plot_xmax", type=float, default=0.0, help="Maximum x-value for the plot x-range")
     parser.add_argument("--num_points", type=int, default=1000, help="Number of points in the output spectrum")
     parser.add_argument("--lineshape", choices=["pseudo-voigt", "lorentzian"], default="lorentzian", help="Lineshape to use")
     parser.add_argument("--contributions", action="store_true", help="Plot individual stick contributions")
     parser.add_argument("--scale", type=float, default=1.0, help="Scale factor for stick intensities")
     parser.add_argument("--shift", type=float, default=0.0, help="Energy shift for stick positions")
     parser.add_argument("--exp", type=str, help="Experimental data file")
+    parser.add_argument("--save", type=str, help="File path/filename of figure")
 
     args = parser.parse_args()
 
@@ -89,11 +92,11 @@ def main():
     stick_intensities = data[:, 3]*args.scale
 
     x, spectrum, individual_contributions = broaden_spectrum(
-        stick_positions, stick_intensities, args.gamma, (args.x_min, args.x_max),
+        stick_positions, stick_intensities, args.gamma, (args.x_min+args.shift, args.x_max+args.shift),
         args.num_points, args.lineshape, args.weight)
 
     #Plotting broadened spectrum
-    plt.plot(x, spectrum/np.max(spectrum), label="Broadening = {} eV, shift = {} eV".format(args.gamma,args.shift), linewidth=2.5, color='black')  #the spectrum is normalized to 1 here when plotted, linewidth is the ploted line thickness
+    plt.plot(x, spectrum/np.max(spectrum), label="Broadening = {} eV,\n shift = {} eV".format(args.gamma,args.shift), linewidth=2.5, color='black')  #the spectrum is normalized to 1 here when plotted, linewidth is the ploted line thickness
 
     #Contributions flag turned on for individual contributions from each transition 
     if args.contributions:
@@ -110,12 +113,22 @@ def main():
         exp_intensities = exp_data[:, 1] / np.max(exp_data[:, 1]) #this normalizes the experimental intensities
         plt.plot(exp_positions, exp_intensities, label="Experiment", linestyle='--', color='red', linewidth=1.5)
 
+
+
     plt.xlabel("Energy")
     plt.ylabel("Intensity")
-    plt.legend()
+    plt.legend(loc= 'upper right')
     plt.ylim([0.0, 1])  # Adjust as needed
-    plt.xlim([3715,3735])
-#    plt.xlim([args.x_min, args.x_max])
+#    if args.exp:
+#        plot_min=np.min(exp_data[:,0])
+#        plot_max=np.max(exp_data[:,0])
+#        plt.xlim([plot_min,plot_max])
+#    else:
+#    plt.xlim([args.x_min+args.shift, args.x_max+args.shift])
+    plt.xlim([args.plot_xmin, args.plot_xmax])
+    if args.save:
+        plt.savefig(args.save, dpi=300)
+        print(f"Figure saved to {args.save}")
     plt.show()
 
 if __name__ == "__main__":
