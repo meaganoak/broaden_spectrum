@@ -19,7 +19,7 @@ def voigt(x, x0, gamma, gamma_g):
     return  gaussian * lorentzian
 
 # Broaden stick spectra with individual contributions
-def broaden_spectrum(stick_positions, stick_intensities, gamma_g, gamma, x_range, num_points=1000, lineshape="lorentzian", weight=1.0):
+def broaden_spectrum(stick_positions, stick_intensities, gamma, x_range, num_points=1000, lineshape="lorentzian", weight=1.0, gamma_g=None):
     """
     Broadens stick spectra using a specified lineshape.
 
@@ -87,11 +87,14 @@ def main():
     stick_intensities = stick_intensities[mask]
 
     x, spectrum, individual_contributions = broaden_spectrum(
-        stick_positions, stick_intensities, args.gamma, args.gamma_g, (args.x_min+args.shift, args.x_max+args.shift),
-        args.num_points, args.lineshape, args.weight)
+        stick_positions, stick_intensities, args.gamma,(args.x_min+args.shift, args.x_max+args.shift),
+        args.num_points, args.lineshape, args.weight, gamma_g=args.gamma_g if args.lineshape in ["voight", "pseudo-voigt"] else None)
 
     #Plotting broadened spectrum
-    plt.plot(x, spectrum/np.max(spectrum), label="gamma_l= {} eV,\n gamma_g = {} eV, \n shift = {} eV".format(args.gamma,args.gamma_g,args.shift), linewidth=2.5, color='black')  #the spectrum is normalized to 1 here when plotted, linewidth is the ploted line thickness
+    label_text = f"gamma_l= {args.gamma} eV,\n shift = {args.shift} eV"
+    if args.lineshape in ["voigt", "pseudo-voigt"]:
+        label_text += f",\n gamma_g = {args.gamma_g} eV"
+    plt.plot(x, spectrum/np.max(spectrum), label=label_text, linewidth=2.5, color='black')  #the spectrum is normalized to 1 here when plotted, linewidth is the ploted line thickness
 
     #Contributions flag turned on for individual contributions from each transition 
     if args.contributions:
@@ -106,7 +109,11 @@ def main():
         exp_data = np.loadtxt(args.exp, skiprows=1)
         exp_positions = exp_data[:, 0]
         exp_intensities = exp_data[:, 1] / np.max(exp_data[:, 1]) #this normalizes the experimental intensities
-        plt.plot(exp_positions, exp_intensities, label="Experiment", linestyle='--', color='red', linewidth=1.5)
+        #plt.plot(exp_positions, exp_intensities, label="Experiment", linestyle='--', color='red', linewidth=1.5)
+        plt.axvline(x=531.4,ymin=0,ymax=1)
+        plt.axvline(x=534.1,ymin=0,ymax=1)
+        plt.axvline(x=536.5,ymin=0,ymax=1)
+        #plt.plot(exp_positions, exp_intensities, label="Experiment", linestyle='--', color='red')
 
 
 
