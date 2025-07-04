@@ -66,7 +66,8 @@ def main():
     parser.add_argument("--threshold", type=float, default=0.0, help="Threshold for stick intensities included in spectrum evaluation")
     parser.add_argument("--exp", type=str, help="Experimental data file")
     parser.add_argument("--save", type=str, help="File path/filename of figure")
-
+    parser.add_argument("--uvvis_defaults", action="store_true", help="Use UV-Vis plotting defaults (Gaussian broadening, cm-1, reversed x-axis)")
+   
     args = parser.parse_args()
 
     data = np.loadtxt(args.input_file, skiprows=1)
@@ -83,6 +84,26 @@ def main():
         args.gamma = convert_units(np.array([args.gamma]), args.convert)[0]
         if args.gamma_g:
             args.gamma_g = convert_units(np.array([args.gamma_g]), args.convert)[0]
+
+    if args.uvvis_defaults:
+        if args.convert is None:
+            args.convert = "ev_to_cm"
+        if args.lineshape == "lorentzian": 
+            args.lineshape = "gaussian"
+        if args.gamma_g == 1.0:
+            args.gamma_g = 800
+        if args.x_min == 0.0:
+            args.x_min = 8000
+        if args.x_max == 50.0:
+            args.x_max = 35000
+        if args.plot_xmin == 0.0:
+            args.plot_xmin = 8000
+        if args.plot_xmax == 0.0:
+            args.plot_xmax = 35000
+        if args.num_points == 1000:
+            args.num_points = 2000
+        if args.threshold == 0.0:
+            args.threshold = 0.01
 
     max_intensity = np.max(stick_intensities)
     threshold_ = args.threshold * max_intensity
@@ -126,6 +147,8 @@ def main():
     if args.save:
         plt.savefig(args.save, dpi=300)
         print(f"Figure saved to {args.save}")
+    if args.uvvis_defaults:
+        plt.gca().invert_xaxis()
     plt.show()
 
 if __name__ == "__main__":
