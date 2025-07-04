@@ -7,7 +7,8 @@ def lorentzian(x, x0, gamma):
     return gamma / np.pi / ((x - x0)**2 + gamma**2)
 
 def gaussian(x, x0, gamma_g):
-    return (1 / (gamma_g * np.sqrt(2 * np.pi))) * np.exp(-(x - x0)**2 / (2 * gamma_g**2))
+    sigma = gamma_g / (2 * np.sqrt(2 * np.log(2)))
+    return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-(x - x0)**2 / (2 * sigma**2))
 
 def pseudovoigt(x, x0, gamma, weight):
     return (1 - weight) * gaussian(x, x0, gamma) + weight * lorentzian(x, x0, gamma)
