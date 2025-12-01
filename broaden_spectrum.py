@@ -89,14 +89,17 @@ def main():
         args.units = "cm-1"
         args.lineshape = "gaussian"
         stick_positions = convert_units(stick_positions, "ev_to_cm")
-        if args.gamma_g <= 0: args.gamma_g = 300.0
+        if args.gamma_g <= 0: 
+            args.gamma_g = 300.0
         gamma_to_use = args.gamma
         gamma_g_to_use = args.gamma_g
         margin = 0.1 * (stick_positions.max() - stick_positions.min())
         args.x_min = stick_positions.min() - margin
         args.x_max = stick_positions.max() + margin
-        args.plot_xmin = args.x_min
-        args.plot_xmax = args.x_max
+        if args.plot_xmin == 0.0:
+            args.plot_xmin = args.x_min
+        if args.plot_xmax == 0.0:
+            args.plot_xmax = args.x_max
         args.num_points = 2000
         args.threshold = 0.0
 
@@ -122,13 +125,13 @@ def main():
     # Plot
     unit_label = r"cm$^{-1}$" if args.units == "cm-1" else "eV"
     if args.uvvis_defaults or args.lineshape == "gaussian":
-        label_text = rf"$\gamma_g$ = {args.gamma:.2f} {unit_label}"
+        label_text = rf"$\gamma_g$ = {gamma_g_to_use:.2f} {unit_label}"
     else:
-        label_text = rf"$\gamma_l$ = {args.gamma:.2f} {unit_label}"
+        label_text = rf"$\gamma_l$ = {gamma_to_use:.2f} {unit_label}"
         if args.shift != 0.0:
             label_text += rf", shift = {args.shift:.2f} {unit_label}"
         if args.lineshape in ["voigt", "pseudo-voigt"]:
-            label_text += rf", $\gamma_g$ = {args.gamma_g:.2f} {unit_label}"
+            label_text += rf", $\gamma_g$ = {gamma_g_to_use:.2f} {unit_label}"
 
     plt.plot(x, spectrum / np.max(spectrum), label=label_text, linewidth=2.5, color='black')
 
@@ -143,6 +146,7 @@ def main():
         exp_data = np.loadtxt(args.exp, skiprows=1)
         exp_positions = exp_data[:, 0]
         exp_intensities = exp_data[:, 1] / np.max(exp_data[:, 1])
+        plot_xmax = np.max(exp_positions)
         plt.plot(exp_positions, exp_intensities, linestyle='--', color='red', label="Experiment")
 
     plt.xlabel(f"Energy ({unit_label})")
