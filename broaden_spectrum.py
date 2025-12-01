@@ -143,8 +143,6 @@ def main():
         exp_data = np.loadtxt(args.exp, skiprows=1)
         exp_positions = exp_data[:, 0]
         exp_intensities = exp_data[:, 1] / np.max(exp_data[:, 1])
-        if args.units == "cm-1":
-            exp_positions = convert_units(exp_positions, "ev_to_cm")
         plt.plot(exp_positions, exp_intensities, linestyle='--', color='red', label="Experiment")
 
     plt.xlabel(f"Energy ({unit_label})")
